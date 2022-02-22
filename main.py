@@ -215,12 +215,24 @@ async def rank(ctx, arg):
         img.paste(imgrank, area)
         imgrank.close()
 
+        # check if predator badge was placed
+        if 'Apex Predator' == RequestDataResponse['global']['rank']['rankName']:
+            # write Predator rank
+            w2, h2 = img1draw.textsize('#' + str(RequestDataResponse['global']['rank']['ladderPosPlatform']), font=DisiFont15)
+            img1draw.text(((((W / 2) - w2) / 2), h + h1 + 113), '#' + str(RequestDataResponse['global']['rank']['ladderPosPlatform']), fill='white', font=DisiFont15)
+
         # draw AR Rank symbol
         imgrank = Image.open('src/rank/' + RequestDataResponse['global']['arena']['rankName'] + str(RequestDataResponse['global']['arena']['rankDiv']) + '.png')
         imgrank = imgrank.resize((120, 120), Image.ADAPTIVE)
         area = (int(((W / 2) - 120) / 2 + (W / 2)), h + h1 + 20, int(((W / 2) - 120) / 2 + (W / 2)) + 120, h + h1 + 140)
         img.paste(imgrank, area)
         imgrank.close()
+
+        # check if predator badge was placed
+        if 'Apex Predator' == RequestDataResponse['global']['arena']['rankName']:
+            # write Predator rank
+            w2, h2 = img1draw.textsize('#' + str(RequestDataResponse['global']['arena']['ladderPosPlatform']), font=DisiFont15)
+            img1draw.text(((((W / 2) - w2) / 2) + (W / 2), h + h1 + 113), '#' + str(RequestDataResponse['global']['arena']['ladderPosPlatform']), fill='white', font=DisiFont15)
 
         # write BR Rank value
         w1, h1 = img1draw.textsize(str(RequestDataResponse['global']['rank']['rankScore']) + 'RP', font=DisiFont20)
@@ -229,11 +241,6 @@ async def rank(ctx, arg):
         # write AR Rank value
         w1, h1 = img1draw.textsize(str(RequestDataResponse['global']['arena']['rankScore']) + 'AP', font=DisiFont20)
         img1draw.text(((((W / 2) - w1) / 2) + (W / 2), h + h1 + 150), str(RequestDataResponse['global']['arena']['rankScore']) + 'AP', fill='white', font=DisiFont20)
-
-        if 'Apex Predator' == RequestDataResponse['global']['rank']['rankName']:
-            # write Predator rank
-            w2, h2 = img1draw.textsize('#' + str(RequestDataResponse['global']['rank']['ladderPosPlatform']), font=DisiFont15)
-            img1draw.text(((((W / 2) - w2) / 2), h + h1 + 113), '#' + str(RequestDataResponse['global']['rank']['ladderPosPlatform']), fill='white', font=DisiFont15)
 
         # save picture
         img.save('output.png')
