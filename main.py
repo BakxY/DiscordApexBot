@@ -12,6 +12,7 @@ import shutil
 import urllib.request
 
 #import and create fonts
+DisiFont15 = ImageFont.truetype("font.ttf", 15)
 DisiFont20 = ImageFont.truetype("font.ttf", 20)
 DisiFont25 = ImageFont.truetype("font.ttf", 25)
 
@@ -228,7 +229,15 @@ async def rank(ctx, arg):
         # write AR Rank value
         w1, h1 = img1draw.textsize(str(RequestDataResponse['global']['arena']['rankScore']) + 'AP', font=DisiFont20)
         img1draw.text(((((W / 2) - w1) / 2) + (W / 2), h + h1 + 150), str(RequestDataResponse['global']['arena']['rankScore']) + 'AP', fill='white', font=DisiFont20)
+
+        if 'Apex Predator' == RequestDataResponse['global']['rank']['rankName']:
+            # write Predator rank
+            w2, h2 = img1draw.textsize('#' + str(RequestDataResponse['global']['rank']['ladderPosPlatform']), font=DisiFont15)
+            img1draw.text(((((W / 2) - w2) / 2), h + h1 + 113), '#' + str(RequestDataResponse['global']['rank']['ladderPosPlatform']), fill='white', font=DisiFont15)
+
+        # save picture
         img.save('output.png')
+        img.close()
 
         # send picture to channel
         await ctx.channel.send(file=discord.File('output.png'))
