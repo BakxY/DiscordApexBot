@@ -10,11 +10,12 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 import requests
 import shutil
 import urllib.request
+import time
 
 #import and create fonts
-DisiFont15 = ImageFont.truetype("font.ttf", 15)
-DisiFont20 = ImageFont.truetype("font.ttf", 20)
-DisiFont25 = ImageFont.truetype("font.ttf", 25)
+DisiFont15 = ImageFont.truetype("src/fonts/font.ttf", 15)
+DisiFont20 = ImageFont.truetype("src/fonts/font.ttf", 20)
+DisiFont25 = ImageFont.truetype("src/fonts/font.ttf", 25)
 
 # get discord api key form file
 DISI_TOKEN_FILE = open("src/token/DISI_API_TOKEN", 'r')
@@ -27,7 +28,14 @@ APEX_TOKEN = APEX_TOKEN_FILE.read()
 APEX_TOKEN_FILE.close()
 
 # create bot with a command prefix
-client = commands.Bot(command_prefix="!")
+help_command = commands.DefaultHelpCommand(
+    no_category = 'Commands'
+)
+client = commands.Bot(
+    command_prefix = commands.when_mentioned_or('!'),
+    description = 'This a bot for discord, that can display stats, rankings and current maps for apex legends.',
+    help_command = help_command
+)
 
 # create width and height for ranked image
 W, H = 250, 250
@@ -37,13 +45,13 @@ W, H = 250, 250
 async def on_ready():
     print(f'{client.user} has connected to Discord')
 
-@client.command()
+@client.command(brief='Pings all user in a discord', description='This command pings all user in a discord server and sends an image')
 @commands.cooldown(rate=1, per=5, type=commands.BucketType.channel)
 async def pingall(ctx):
     await ctx.channel.send('@everyone')
     await ctx.channel.send(file=discord.File('src/ping.jpg'))
 
-@client.command()
+@client.command(brief='Shows the current map rotation', description='This command displays the current map rotation of apex legends')
 @commands.cooldown(rate=1, per=5, type=commands.BucketType.channel)
 async def map(ctx):
     # send request to the api and store the response
@@ -93,9 +101,9 @@ async def map(ctx):
                                 ' \nNext map: ' + RequestDataResponse['arenasRanked']['next']['map'] +
                                 '```')
 
-@client.command()
+@client.command(brief='Shows stats of a player', description='This command displays stats of a given player')
 @commands.cooldown(rate=1, per=5, type=commands.BucketType.channel)
-async def stats(ctx, arg):
+async def stats(ctx, Player):
     # create variables
     PlayerFound, CounterForFor, Platforms = 0, 0, ['PC', 'PS4', 'X1']
 
@@ -107,7 +115,7 @@ async def stats(ctx, arg):
             break
 
         # send request to the api and store the response
-        RequestForStats = requests.get('https://api.mozambiquehe.re/bridge?version=5&platform=' + Platforms[CounterForFor] + '&player=' + arg + '&auth=' + APEX_TOKEN)
+        RequestForStats = requests.get('https://api.mozambiquehe.re/bridge?version=5&platform=' + Platforms[CounterForFor] + '&player=' + Player + '&auth=' + APEX_TOKEN)
         RequestDataResponse = json.loads(RequestForStats.text)
 
         # check if the api sent a error
@@ -168,10 +176,10 @@ async def stats(ctx, arg):
         # print error message to cli
         print('Error during request to API, message from API: ' + str(RequestDataResponse))
 
-@client.command()
+@client.command(brief='Shows ranks of a player', description='This command displays ranks of a given player')
 @commands.cooldown(rate=1, per=5, type=commands.BucketType.channel)
-async def rank(ctx, arg):
-    RequestForStats = requests.get('https://api.mozambiquehe.re/bridge?version=5&platform=PC&player=' + arg + '&auth=' + APEX_TOKEN)
+async def rank(ctx, Player):
+    RequestForStats = requests.get('https://api.mozambiquehe.re/bridge?version=5&platform=PC&player=' + Player + '&auth=' + APEX_TOKEN)
     RequestDataResponse = json.loads(RequestForStats.text)
 
     if 'Error' in RequestDataResponse:
@@ -248,6 +256,23 @@ async def rank(ctx, arg):
 
         # send picture to channel
         await ctx.channel.send(file=discord.File('output.png'))
+
+@client.event
+async def on_message(message):
+    if client.user.mentioned_in(message):
+        ctx = await client.get_context(message)
+        if not ctx.message.author.voice:
+            await ctx.send("{} is not connected to a voice channel".format(ctx.message.author.name))
+            return
+        else:
+            channel = ctx.message.author.voice.channel
+
+        vc = await channel.connect()
+        vc.play(discord.FFmpegPCMAudio(executable="src/bin/ffmpeg.exe", source='src/sound/dafuq.mp3'))
+
+        time.sleep(2)
+
+        await vc.disconnect()
 
 # run the client
 client.run(DISI_TOKEN)
