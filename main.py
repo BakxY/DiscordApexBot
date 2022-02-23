@@ -38,6 +38,21 @@ client = commands.Bot(
     help_command = help_command
 )
 
+OperatingSystem = sys.platform # get the current operating system
+
+if OperatingSystem == 'win32': # os is windows
+    PathToFFMPEG = 'src/bin/ffmpeg.exe'
+
+elif OperatingSystem == 'linux': # os is linux
+    PathToFFMPEG = 'src/bin/ffmpeg-linux'
+
+elif OperatingSystem == 'darwin': # os is macOS
+    PathToFFMPEG = 'src/bin/ffmpeg-mac'
+
+else: # os is not in list
+    print('No FFMPEG version for you os')
+    exit()
+
 # create width and height for ranked image
 W, H = 250, 250
 
@@ -269,7 +284,7 @@ async def on_message(message):
             channel = ctx.message.author.voice.channel
 
         vc = await channel.connect()
-        vc.play(discord.FFmpegPCMAudio(executable="src/bin/ffmpeg.exe", source='src/sound/dafuq.mp3'))
+        vc.play(discord.FFmpegPCMAudio(executable=PathToFFMPEG, source='src/sound/dafuq.mp3'))
 
         time.sleep(2)
 
