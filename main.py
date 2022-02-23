@@ -2,7 +2,6 @@
 import os
 import sys
 from typing import Counter
-#from urllib import response
 import discord
 from discord.ext import commands
 import json
@@ -20,11 +19,13 @@ DisiFont25 = ImageFont.truetype("src/fonts/font.ttf", 25)
 # get discord api key form file
 DISI_TOKEN_FILE = open("src/token/DISI_API_TOKEN", 'r')
 DISI_TOKEN = DISI_TOKEN_FILE.read()
+DISI_TOKEN = DISI_TOKEN.replace('\n', '')
 DISI_TOKEN_FILE.close()
 
 # get apex api key form file
 APEX_TOKEN_FILE = open("src/token/APEX_API_TOKEN", 'r')
 APEX_TOKEN = APEX_TOKEN_FILE.read()
+APEX_TOKEN = APEX_TOKEN.replace('\n', '')
 APEX_TOKEN_FILE.close()
 
 # create bot with a command prefix
