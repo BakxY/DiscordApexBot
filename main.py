@@ -61,11 +61,25 @@ W, H = 250, 250
 async def on_ready():
     print(f'{client.user} has connected to Discord')
 
+
+
+
+
+
+
+
 @client.command(brief='Pings all user in a discord', description='This command pings all user in a discord server and sends an image')
 @commands.cooldown(rate=1, per=5, type=commands.BucketType.channel)
 async def pingall(ctx):
     await ctx.channel.send('@everyone')
     await ctx.channel.send(file=discord.File('src/ping.jpg'))
+
+
+
+
+
+
+
 
 @client.command(brief='Shows the current map rotation', description='This command displays the current map rotation of apex legends')
 @commands.cooldown(rate=1, per=5, type=commands.BucketType.channel)
@@ -116,6 +130,13 @@ async def map(ctx):
                                 '\nRemaining: ' + RequestDataResponse['arenasRanked']['current']['remainingTimer'] +
                                 ' \nNext map: ' + RequestDataResponse['arenasRanked']['next']['map'] +
                                 '```')
+
+
+
+
+
+
+
 
 @client.command(brief='Shows stats of a player', description='This command displays stats of a given player')
 @commands.cooldown(rate=1, per=5, type=commands.BucketType.channel)
@@ -192,20 +213,38 @@ async def stats(ctx, Player):
         # print error message to cli
         print('Error during request to API, message from API: ' + str(RequestDataResponse))
 
+
+
+
+
+
+
+
 @client.command(brief='Shows ranks of a player', description='This command displays ranks of a given player')
 @commands.cooldown(rate=1, per=5, type=commands.BucketType.channel)
 async def rank(ctx, Player):
-    RequestForStats = requests.get('https://api.mozambiquehe.re/bridge?version=5&platform=PC&player=' + Player + '&auth=' + APEX_TOKEN)
-    RequestDataResponse = json.loads(RequestForStats.text)
+    PlayerFound, CounterForFor, Platforms = 0, 0, ['PC', 'PS4', 'X1']
 
-    if 'Error' in RequestDataResponse:
-        # send error message to discord channel
-        await ctx.channel.send(RequestDataResponse['Error'])
-        await ctx.channel.send(file=discord.File('src/sad-cute.gif'))
-        # print error message to cli
-        print('Error during request to API, message from API: ' + str(RequestDataResponse))
+    while PlayerFound == 0:
+        # check if all the platforms have been checked
+        if CounterForFor >= 3:
+            # goto error and break
+            PlayerFound = 2
+            break
 
-    else:
+        # send request to the api and store the response
+        RequestForStats = requests.get('https://api.mozambiquehe.re/bridge?version=5&platform=' + Platforms[CounterForFor] + '&player=' + Player + '&auth=' + APEX_TOKEN)
+        RequestDataResponse = json.loads(RequestForStats.text)
+
+        # check if the api sent a error
+        if 'Error' in RequestDataResponse: 
+            PlayerFound = 0
+        elif 'global' in RequestDataResponse:
+            PlayerFound = 1
+
+        CounterForFor += 1
+
+    if PlayerFound == 1: # Player exists in database
         # download BR rank image and store it
         RankImgRequest = requests.get(RequestDataResponse['global']['rank']['rankImg'], allow_redirects=True, stream=True)
         with open('src/rank/' + RequestDataResponse['global']['rank']['rankName'] + str(RequestDataResponse['global']['rank']['rankDiv']) + '.png','wb') as f:
@@ -272,6 +311,20 @@ async def rank(ctx, Player):
 
         # send picture to channel
         await ctx.channel.send(file=discord.File('output.png'))
+
+    elif PlayerFound == 2: # player not found or error
+        # send error message to discord channel
+        await ctx.channel.send(RequestDataResponse['Error'])
+        await ctx.channel.send(file=discord.File('src/sad-cute.gif'))
+        # print error message to cli
+        print('Error during request to API, message from API: ' + str(RequestDataResponse))
+
+
+
+
+
+
+
 
 @client.event
 async def on_message(message):
