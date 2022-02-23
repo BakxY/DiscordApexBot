@@ -274,6 +274,7 @@ async def on_message(message):
         time.sleep(2)
 
         await vc.disconnect()
+    await client.process_commands(message)
 
 # run the client
 client.run(DISI_TOKEN)
