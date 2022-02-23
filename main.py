@@ -1,6 +1,5 @@
 # much epic disi apex bot go brrrrrrrrrrrrrrrrrrrrrrrrrr
 import os
-from pathlib import Path
 import sys
 from typing import Counter
 import discord
