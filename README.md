@@ -10,4 +10,4 @@ If you wish to run this bot yourself, you will have to create a bot in your [dis
 
 ## I found a issue
 
-If you find issues with the bot, please create an issue or if you have a solution, a branch a pull request.
+If you find issues with the bot, please create an issue or if you have a solution, a branch and pull request.
