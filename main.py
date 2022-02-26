@@ -1,5 +1,6 @@
 # much epic disi apex bot go brrrrrrrrrrrrrrrrrrrrrrrrrr
 import os
+from pickle import FALSE, TRUE
 import sys
 from typing import Counter
 import discord
@@ -84,52 +85,67 @@ async def pingall(ctx):
 @client.command(brief='Shows the current map rotation', description='This command displays the current map rotation of apex legends')
 @commands.cooldown(rate=1, per=5, type=commands.BucketType.channel)
 async def map(ctx):
-    # send request to the api and store the response
-    RequestForMaps = requests.get('https://api.mozambiquehe.re/maprotation?version=2&auth=' + APEX_TOKEN)
-    RequestDataResponse = RequestForMaps.json()
+    try:
+        APINotReachable = FALSE
+        # send request to the api and store the response
+        RequestForMaps = requests.get('https://api.mozambiquehe.re/maprotation?version=2&auth=' + APEX_TOKEN)
 
-    # choose right image for map
-    if RequestDataResponse['battle_royale']['current']['map'] == 'Olympus': # map is opympus
-        await ctx.channel.send(file=discord.File('src/maps/olympus.jpg'))
+    except requests.ConnectionError as exc:
+        if("[Errno 11001] getaddrinfo failed" in str(exc) or # windows
+            "[Errno -2] Name or service not known" in str(exc) or # linux
+            "[Errno 8] nodename nor servname " in str(exc)): # Mac OS
+            print('[ERROR] The API is not reachable by the bot')
+            APINotReachable = TRUE
 
-    elif RequestDataResponse['battle_royale']['current']['map'] == 'Kings Canyon': # map is kings canyon
-        await ctx.channel.send(file=discord.File('src/maps/kings-canyon.jpg'))
+    if APINotReachable == FALSE:
+        RequestDataResponse = RequestForMaps.json()
 
-    elif RequestDataResponse['battle_royale']['current']['map'] == 'Storm Point': # map is storm point
-        await ctx.channel.send(file=discord.File('src/maps/stormpoint.jpg'))
+        # choose right image for map
+        if RequestDataResponse['battle_royale']['current']['map'] == 'Olympus': # map is opympus
+            await ctx.channel.send(file=discord.File('src/maps/olympus.jpg'))
 
-    else: #default case
-        await ctx.channel.send('```diff' +
-                                'Map image not implemented yet.'
-                                '```')
-    
+        elif RequestDataResponse['battle_royale']['current']['map'] == 'Kings Canyon': # map is kings canyon
+            await ctx.channel.send(file=discord.File('src/maps/kings-canyon.jpg'))
 
-    # send battle royale maps
-    await ctx.channel.send('**BATTLE ROYALE**' + 
-                                '\n```Current map: ' + RequestDataResponse['battle_royale']['current']['map'] +
-                                '\nRemaining: ' + RequestDataResponse['battle_royale']['current']['remainingTimer'] +
-                                '\nNext map: ' + RequestDataResponse['battle_royale']['next']['map'] +
-                                '```')
+        elif RequestDataResponse['battle_royale']['current']['map'] == 'Storm Point': # map is storm point
+            await ctx.channel.send(file=discord.File('src/maps/stormpoint.jpg'))
 
-    #send battle royale ranked map
-    await ctx.channel.send('**BATTLE ROYALE RANKED**' +
-                                '\n```Current map: ' + RequestDataResponse['ranked']['current']['map'] +
-                                '\nNext split map: ' + RequestDataResponse['ranked']['next']['map'] +
-                                '```')
+        else: #default case
+            await ctx.channel.send('```diff' +
+                                    'Map image not implemented yet.'
+                                    '```')
 
-    #send arenas maps
-    await ctx.channel.send('**ARENAS**' +
-                                '\n```Current map: ' + RequestDataResponse['arenas']['current']['map'] +
-                                '\nRemaining: ' + RequestDataResponse['arenas']['current']['remainingTimer'] +
-                                '\nNext map: ' + RequestDataResponse['arenas']['next']['map'] +
-                                '```')
 
-    #send arenas ranked maps
-    await ctx.channel.send('**ARENAS RANKED**' +
-                                '\n```Current map: ' + RequestDataResponse['arenasRanked']['current']['map'] +
-                                '\nRemaining: ' + RequestDataResponse['arenasRanked']['current']['remainingTimer'] +
-                                ' \nNext map: ' + RequestDataResponse['arenasRanked']['next']['map'] +
-                                '```')
+        # send battle royale maps
+        await ctx.channel.send('**BATTLE ROYALE**' + 
+                                    '\n```Current map: ' + RequestDataResponse['battle_royale']['current']['map'] +
+                                    '\nRemaining: ' + RequestDataResponse['battle_royale']['current']['remainingTimer'] +
+                                    '\nNext map: ' + RequestDataResponse['battle_royale']['next']['map'] +
+                                    '```')
+
+        #send battle royale ranked map
+        await ctx.channel.send('**BATTLE ROYALE RANKED**' +
+                                    '\n```Current map: ' + RequestDataResponse['ranked']['current']['map'] +
+                                    '\nNext split map: ' + RequestDataResponse['ranked']['next']['map'] +
+                                    '```')
+
+        #send arenas maps
+        await ctx.channel.send('**ARENAS**' +
+                                    '\n```Current map: ' + RequestDataResponse['arenas']['current']['map'] +
+                                    '\nRemaining: ' + RequestDataResponse['arenas']['current']['remainingTimer'] +
+                                    '\nNext map: ' + RequestDataResponse['arenas']['next']['map'] +
+                                    '```')
+
+        #send arenas ranked maps
+        await ctx.channel.send('**ARENAS RANKED**' +
+                                    '\n```Current map: ' + RequestDataResponse['arenasRanked']['current']['map'] +
+                                    '\nRemaining: ' + RequestDataResponse['arenasRanked']['current']['remainingTimer'] +
+                                    ' \nNext map: ' + RequestDataResponse['arenasRanked']['next']['map'] +
+                                    '```')
+    else:
+        # send error message to discord channel
+        await ctx.channel.send('The API is currently offline')
+        await ctx.channel.send(file=discord.File('src/sad-cute.gif'))
 
 
 
@@ -143,8 +159,9 @@ async def map(ctx):
 async def stats(ctx, Player):
     # create variables
     PlayerFound, CounterForFor, Platforms = 0, 0, ['PC', 'PS4', 'X1']
+    APINotReachable = FALSE
 
-    while PlayerFound == 0:
+    while PlayerFound == 0 and APINotReachable == FALSE:
         # check if all the platforms have been checked
         if CounterForFor >= 3:
             # goto error and break
@@ -152,19 +169,32 @@ async def stats(ctx, Player):
             break
 
         # send request to the api and store the response
-        RequestForStats = requests.get('https://api.mozambiquehe.re/bridge?version=5&platform=' + Platforms[CounterForFor] + '&player=' + Player + '&auth=' + APEX_TOKEN)
-        RequestDataResponse = json.loads(RequestForStats.text)
+        try:
+            RequestForStats = requests.get('https://api.mozambiquehe.re/bridge?version=5&platform=' + Platforms[CounterForFor] + '&player=' + Player + '&auth=' + APEX_TOKEN)
 
-        # check if the api sent a error
-        if 'Error' in RequestDataResponse: 
-            PlayerFound = 0
-        elif 'global' in RequestDataResponse:
-            PlayerFound = 1
+        except requests.ConnectionError as exc:
+            if("[Errno 11001] getaddrinfo failed" in str(exc) or # windows
+                "[Errno -2] Name or service not known" in str(exc) or # linux
+                "[Errno 8] nodename nor servname " in str(exc)): # Mac OS
+                print('[ERROR] The API is not reachable by the bot')
+                APINotReachable = TRUE
 
-        CounterForFor += 1
+            else:
+                raise exc
+        
+        if APINotReachable == FALSE:
+            RequestDataResponse = json.loads(RequestForStats.text)
+
+            # check if the api sent a error
+            if 'Error' in RequestDataResponse: 
+                PlayerFound = 0
+            elif 'global' in RequestDataResponse:
+                PlayerFound = 1
+
+            CounterForFor += 1
         
 
-    if PlayerFound == 1: # Player exists in database
+    if PlayerFound == 1 and APINotReachable == FALSE: # Player exists in database
         # send name and current legend to discord
         await ctx.channel.send('**' + RequestDataResponse['global']['name'] + '**`s' + ' current Legend is **' + RequestDataResponse['legends']['selected']['LegendName'] + '**')
         
@@ -212,7 +242,11 @@ async def stats(ctx, Player):
         await ctx.channel.send(file=discord.File('src/sad-cute.gif'))
         # print error message to cli
         print('Error during request to API, message from API: ' + str(RequestDataResponse))
-
+    
+    elif APINotReachable == TRUE:
+        # send error message to discord channel
+        await ctx.channel.send('The API is currently offline')
+        await ctx.channel.send(file=discord.File('src/sad-cute.gif'))
 
 
 
@@ -224,6 +258,7 @@ async def stats(ctx, Player):
 @commands.cooldown(rate=1, per=5, type=commands.BucketType.channel)
 async def rank(ctx, Player):
     PlayerFound, CounterForFor, Platforms = 0, 0, ['PC', 'PS4', 'X1']
+    APINotReachable = FALSE
 
     while PlayerFound == 0:
         # check if all the platforms have been checked
@@ -233,18 +268,29 @@ async def rank(ctx, Player):
             break
 
         # send request to the api and store the response
-        RequestForStats = requests.get('https://api.mozambiquehe.re/bridge?version=5&platform=' + Platforms[CounterForFor] + '&player=' + Player + '&auth=' + APEX_TOKEN)
-        RequestDataResponse = json.loads(RequestForStats.text)
+        try:
+            RequestForStats = requests.get('https://api.mozambiquehe.re/bridge?version=5&platform=' + Platforms[CounterForFor] + '&player=' + Player + '&auth=' + APEX_TOKEN)
+        except requests.ConnectionError as exc:
+            if("[Errno 11001] getaddrinfo failed" in str(exc) or # windows
+                "[Errno -2] Name or service not known" in str(exc) or # linux
+                "[Errno 8] nodename nor servname " in str(exc)): # Mac OS
+                print('[ERROR] The API is not reachable by the bot')
+                APINotReachable = TRUE
+            else:
+                raise exc
+                
+        if APINotReachable == FALSE:    
+            RequestDataResponse = json.loads(RequestForStats.text)
 
-        # check if the api sent a error
-        if 'Error' in RequestDataResponse: 
-            PlayerFound = 0
-        elif 'global' in RequestDataResponse:
-            PlayerFound = 1
+            # check if the api sent a error
+            if 'Error' in RequestDataResponse: 
+                PlayerFound = 0
+            elif 'global' in RequestDataResponse:
+                PlayerFound = 1
 
-        CounterForFor += 1
+            CounterForFor += 1
 
-    if PlayerFound == 1: # Player exists in database
+    if PlayerFound == 1 and APINotReachable == FALSE: # Player exists in database
         # download BR rank image and store it
         RankImgRequest = requests.get(RequestDataResponse['global']['rank']['rankImg'], allow_redirects=True, stream=True)
         with open('src/rank/' + RequestDataResponse['global']['rank']['rankName'] + str(RequestDataResponse['global']['rank']['rankDiv']) + '.png','wb') as f:
@@ -318,6 +364,11 @@ async def rank(ctx, Player):
         await ctx.channel.send(file=discord.File('src/sad-cute.gif'))
         # print error message to cli
         print('Error during request to API, message from API: ' + str(RequestDataResponse))
+
+    elif APINotReachable == TRUE:
+        # send error message to discord channel
+        await ctx.channel.send('The API is currently offline')
+        await ctx.channel.send(file=discord.File('src/sad-cute.gif'))
 
 
 
