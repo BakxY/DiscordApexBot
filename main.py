@@ -6,15 +6,11 @@ from typing import Counter
 import discord
 from discord.ext import commands
 import json
-from PIL import Image, ImageDraw, ImageFilter, ImageFont
 import requests
-import shutil
 import urllib.request
 import time
 
-#import and create fonts
-DisiFont15 = ImageFont.truetype("src/fonts/font.ttf", 15)
-DisiFont20 = ImageFont.truetype("src/fonts/font.ttf", 20)
+from rank import *
 
 # get discord api key form file
 DISI_TOKEN_FILE = open("src/token/DISI_API_TOKEN", 'r')
@@ -52,9 +48,6 @@ elif OperatingSystem == 'darwin': # os is macOS
 else: # os is not in list
     print('No FFMPEG version for you os')
     exit()
-
-# create width and height for ranked image
-W, H = 250, 250
 
 # on ready event for start of bot
 @client.event
@@ -290,79 +283,26 @@ async def rank(ctx, Player):
             CounterForFor += 1
 
     if PlayerFound == 1 and APINotReachable == FALSE: # Player exists in database
-        # download BR rank image and store it
-        RankImgRequest = requests.get(RequestDataResponse['global']['rank']['rankImg'], allow_redirects=True, stream=True)
-        with open('src/rank/' + RequestDataResponse['global']['rank']['rankName'] + str(RequestDataResponse['global']['rank']['rankDiv']) + '.png','wb') as f:
-            shutil.copyfileobj(RankImgRequest.raw, f)
+        # download badges
+        RankImage_DownloadBadges(RequestDataResponse['global']['rank'], RequestDataResponse['global']['arena'])
 
-        # download AR rank image and store it
-        RankImgRequest = requests.get(RequestDataResponse['global']['arena']['rankImg'], allow_redirects=True, stream=True)
-        with open('src/rank/' + RequestDataResponse['global']['arena']['rankName'] + str(RequestDataResponse['global']['arena']['rankDiv']) + '.png','wb') as f:
-            shutil.copyfileobj(RankImgRequest.raw, f)
+        # create image
+        RankImage_Create()
 
-        # create new image to edit
-        img = Image.new('RGBA', (W, H))
-        img1draw = ImageDraw.Draw(img)
+        # write player name
+        RankImage_PlayerName(RequestDataResponse['global']['name'])
 
-        # write player name text
-        FontSize = 25
-        w = W + 1
-        while w > W:
-            NameFont = ImageFont.truetype("src/fonts/font.ttf", FontSize)
-            w, h = img1draw.textsize(RequestDataResponse['global']['name'], font=NameFont)
-            if FontSize == 1:
-                break
-            FontSize -= 1
-        img1draw.text(((W - w) / 2, 0), RequestDataResponse['global']['name'], fill="white", font=NameFont)
+        # add BR badge parts
+        RankImage_BRbadge(RequestDataResponse['global']['rank'])
 
-        # write BR Rank text
-        w1, h1 = img1draw.textsize('BR Rank', font=DisiFont20)
-        img1draw.text((((W / 2) - w1) / 2, h + 10), 'BR Rank', fill='white', font=DisiFont20)
+        # add AR badge parts
+        RankImage_ARbadge(RequestDataResponse['global']['arena'])
 
-        # write AR Rank text
-        w1, h1 = img1draw.textsize('AR Rank', font=DisiFont20)
-        img1draw.text(((((W / 2) - w1) / 2) + (W / 2), h + 10), 'AR Rank', fill='white', font=DisiFont20)
-        
-        # draw BR Rank symbol
-        imgrank = Image.open('src/rank/' + RequestDataResponse['global']['rank']['rankName'] + str(RequestDataResponse['global']['rank']['rankDiv']) + '.png')
-        imgrank = imgrank.resize((120, 120), Image.ADAPTIVE)
-        area = (int(((W / 2) - 120) / 2), h + h1 + 20, int(((W / 2) - 120) / 2) + 120, h + h1 + 140)
-        img.paste(imgrank, area)
-        imgrank.close()
-
-        # check if predator badge was placed
-        if 'Apex Predator' == RequestDataResponse['global']['rank']['rankName']:
-            # write Predator rank
-            w2, h2 = img1draw.textsize('#' + str(RequestDataResponse['global']['rank']['ladderPosPlatform']), font=DisiFont15)
-            img1draw.text(((((W / 2) - w2) / 2), h + h1 + 113), '#' + str(RequestDataResponse['global']['rank']['ladderPosPlatform']), fill='white', font=DisiFont15)
-
-        # draw AR Rank symbol
-        imgrank = Image.open('src/rank/' + RequestDataResponse['global']['arena']['rankName'] + str(RequestDataResponse['global']['arena']['rankDiv']) + '.png')
-        imgrank = imgrank.resize((120, 120), Image.ADAPTIVE)
-        area = (int(((W / 2) - 120) / 2 + (W / 2)), h + h1 + 20, int(((W / 2) - 120) / 2 + (W / 2)) + 120, h + h1 + 140)
-        img.paste(imgrank, area)
-        imgrank.close()
-
-        # check if predator badge was placed
-        if 'Apex Predator' == RequestDataResponse['global']['arena']['rankName']:
-            # write Predator rank
-            w2, h2 = img1draw.textsize('#' + str(RequestDataResponse['global']['arena']['ladderPosPlatform']), font=DisiFont15)
-            img1draw.text(((((W / 2) - w2) / 2) + (W / 2), h + h1 + 113), '#' + str(RequestDataResponse['global']['arena']['ladderPosPlatform']), fill='white', font=DisiFont15)
-
-        # write BR Rank value
-        w1, h1 = img1draw.textsize(str(RequestDataResponse['global']['rank']['rankScore']) + 'RP', font=DisiFont20)
-        img1draw.text((((W / 2) - w1) / 2, h + h1 + 150), str(RequestDataResponse['global']['rank']['rankScore']) + 'RP', fill='white', font=DisiFont20)
-
-        # write AR Rank value
-        w1, h1 = img1draw.textsize(str(RequestDataResponse['global']['arena']['rankScore']) + 'AP', font=DisiFont20)
-        img1draw.text(((((W / 2) - w1) / 2) + (W / 2), h + h1 + 150), str(RequestDataResponse['global']['arena']['rankScore']) + 'AP', fill='white', font=DisiFont20)
-
-        # save picture
-        img.save('output.png')
-        img.close()
+        # save image
+        RankImage_Save()
 
         # send picture to channel
-        await ctx.channel.send(file=discord.File('output.png'))
+        await ctx.channel.send(file=discord.File('src/rank/rank.png'))
 
     elif PlayerFound == 2: # player not found or error
         # send error message to discord channel
