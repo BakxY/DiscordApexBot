@@ -15,7 +15,6 @@ import time
 #import and create fonts
 DisiFont15 = ImageFont.truetype("src/fonts/font.ttf", 15)
 DisiFont20 = ImageFont.truetype("src/fonts/font.ttf", 20)
-DisiFont25 = ImageFont.truetype("src/fonts/font.ttf", 25)
 
 # get discord api key form file
 DISI_TOKEN_FILE = open("src/token/DISI_API_TOKEN", 'r')
@@ -306,8 +305,15 @@ async def rank(ctx, Player):
         img1draw = ImageDraw.Draw(img)
 
         # write player name text
-        w, h = img1draw.textsize(RequestDataResponse['global']['name'], font=DisiFont25)
-        img1draw.text(((W - w) / 2, 0), RequestDataResponse['global']['name'], fill="white", font=DisiFont25)
+        FontSize = 25
+        w = W + 1
+        while w > W:
+            NameFont = ImageFont.truetype("src/fonts/font.ttf", FontSize)
+            w, h = img1draw.textsize(RequestDataResponse['global']['name'], font=NameFont)
+            if FontSize == 1:
+                break
+            FontSize -= 1
+        img1draw.text(((W - w) / 2, 0), RequestDataResponse['global']['name'], fill="white", font=NameFont)
 
         # write BR Rank text
         w1, h1 = img1draw.textsize('BR Rank', font=DisiFont20)
