@@ -385,7 +385,8 @@ async def rank(ctx, Player):
 
 @client.event
 async def on_message(message):
-    if client.user.mentioned_in(message):
+    mention = f'<@!{client.user.id}>'
+    if mention in message.content:
         ctx = await client.get_context(message)
         if not ctx.message.author.voice:
             await ctx.send("{} is not connected to a voice channel".format(ctx.message.author.name))
