@@ -11,6 +11,7 @@ import urllib.request
 import time
 
 from rank import *
+from log import *
 
 # get discord api key form file
 DISI_TOKEN_FILE = open("src/token/DISI_API_TOKEN", 'r')
@@ -73,7 +74,6 @@ async def pingall(ctx):
 
 
 
-
 @client.command(brief='Shows the current map rotation', description='This command displays the current map rotation of apex legends')
 @commands.cooldown(rate=1, per=5, type=commands.BucketType.channel)
 async def map(ctx):
@@ -87,6 +87,11 @@ async def map(ctx):
             "[Errno -2] Name or service not known" in str(exc) or # linux
             "[Errno 8] nodename nor servname " in str(exc)): # Mac OS
             print('[ERROR] The API is not reachable by the bot')
+
+            # write error to log
+            LogFile_CheckDate()
+            LogFile_WriteLog('[ERROR] The API is not reachable by the bot')
+
             APINotReachable = TRUE
 
     if APINotReachable == FALSE:
@@ -169,6 +174,10 @@ async def stats(ctx, Player):
                 "[Errno -2] Name or service not known" in str(exc) or # linux
                 "[Errno 8] nodename nor servname " in str(exc)): # Mac OS
                 print('[ERROR] The API is not reachable by the bot')
+
+                # write error to log
+                LogFile_CheckDate()
+                LogFile_WriteLog('[ERROR] The API is not reachable by the bot')
                 APINotReachable = TRUE
 
             else:
@@ -267,6 +276,10 @@ async def rank(ctx, Player):
                 "[Errno -2] Name or service not known" in str(exc) or # linux
                 "[Errno 8] nodename nor servname " in str(exc)): # Mac OS
                 print('[ERROR] The API is not reachable by the bot')
+
+                # write error to log
+                LogFile_CheckDate()
+                LogFile_WriteLog('[ERROR] The API is not reachable by the bot')
                 APINotReachable = TRUE
             else:
                 raise exc
