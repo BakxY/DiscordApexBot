@@ -1,5 +1,4 @@
 # much epic disi apex bot go brrrrrrrrrrrrrrrrrrrrrrrrrr
-import os
 from pickle import FALSE, TRUE
 import sys
 from typing import Counter
@@ -7,7 +6,6 @@ import discord
 from discord.ext import commands
 import json
 import requests
-import urllib.request
 import time
 
 from rank import *
@@ -74,6 +72,7 @@ async def pingall(ctx):
 
 
 
+
 @client.command(brief='Shows the current map rotation', description='This command displays the current map rotation of apex legends')
 @commands.cooldown(rate=1, per=5, type=commands.BucketType.channel)
 async def map(ctx):
@@ -87,11 +86,6 @@ async def map(ctx):
             "[Errno -2] Name or service not known" in str(exc) or # linux
             "[Errno 8] nodename nor servname " in str(exc)): # Mac OS
             print('[ERROR] The API is not reachable by the bot')
-
-            # write error to log
-            LogFile_CheckDate()
-            LogFile_WriteLog('[ERROR] The API is not reachable by the bot')
-
             APINotReachable = TRUE
 
     if APINotReachable == FALSE:
@@ -174,10 +168,6 @@ async def stats(ctx, Player):
                 "[Errno -2] Name or service not known" in str(exc) or # linux
                 "[Errno 8] nodename nor servname " in str(exc)): # Mac OS
                 print('[ERROR] The API is not reachable by the bot')
-
-                # write error to log
-                LogFile_CheckDate()
-                LogFile_WriteLog('[ERROR] The API is not reachable by the bot')
                 APINotReachable = TRUE
 
             else:
@@ -212,7 +202,7 @@ async def stats(ctx, Player):
         #send data as one package
         await ctx.channel.send('**Platform: ' + RequestDataResponse['global']['platform'] + '**\n'
                                 '**Level: ' + str(RequestDataResponse['global']['level']) + '**\n' +
-                                '**Status: ' + str(RequestDataResponse['realtime']['currentStateAsText']) + '**\n_ _')
+                                '**Status: ' + str(RequestDataResponse['realtime']['currentStateAsText']) + '**')
 
         # check if there are any trackers equiped
         if 'data' in RequestDataResponse['legends']['selected']:
@@ -276,10 +266,6 @@ async def rank(ctx, Player):
                 "[Errno -2] Name or service not known" in str(exc) or # linux
                 "[Errno 8] nodename nor servname " in str(exc)): # Mac OS
                 print('[ERROR] The API is not reachable by the bot')
-
-                # write error to log
-                LogFile_CheckDate()
-                LogFile_WriteLog('[ERROR] The API is not reachable by the bot')
                 APINotReachable = TRUE
             else:
                 raise exc
@@ -334,6 +320,75 @@ async def rank(ctx, Player):
 
 
 
+
+
+@client.command(brief='Shows the status of all servers', description='This command lists all the servers with theire status')
+@commands.cooldown(rate=1, per=5, type=commands.BucketType.channel)
+async def status(ctx):
+    APINotReachable, CounterForFor, message, ServerType, ServerLoc = FALSE, 0, '', 0, 0
+
+    try:
+            RequestForStats = requests.get('https://api.mozambiquehe.re/servers?auth=' + APEX_TOKEN)
+    except requests.ConnectionError as exc:
+        if("[Errno 11001] getaddrinfo failed" in str(exc) or # windows
+            "[Errno -2] Name or service not known" in str(exc) or # linux
+            "[Errno 8] nodename nor servname " in str(exc)): # Mac OS
+            print('[ERROR] The API is not reachable by the bot')
+            APINotReachable = TRUE
+        else:
+            raise exc
+
+    if APINotReachable == FALSE:
+        RequestDataResponse = json.loads(RequestForStats.text)
+
+        for i in RequestDataResponse: # repeat for every index in RequestDataResponse
+            if CounterForFor >= 3: # check if all needed data has been outputted
+                break
+            
+            # go from placeholder to variable
+            ServerType = i
+
+            message += '\n **' + ServerType.replace('_', ' ') + '**\n' # add server type to the message
+
+            for j in RequestDataResponse[i]: # repeat for every index in RequestDataResponse[i]
+
+                # go from placeholder to variable
+                ServerLoc = j
+
+                # case for every status
+                if RequestDataResponse[i][j]['Status'] == 'UP':
+                    message += ':green_circle: '
+
+                elif RequestDataResponse[i][j]['Status'] == 'DOWN':
+                    message += ':red_circle: '
+
+                elif RequestDataResponse[i][j]['Status'] == 'SLOW':
+                    message += ':orange_circle: '
+
+                elif RequestDataResponse[i][j]['Status'] == 'OVERLOADED':
+                    message += ':yellow_circle: '
+
+                elif RequestDataResponse[i][j]['Status'] == 'NO DATA':
+                    message += ':zzz:  '
+
+                message += ServerLoc + '\n'
+
+            CounterForFor += 1
+
+        # define a new embed
+        embedVar = discord.Embed(color=0xEF2AEF)
+
+        # set all parameters for the embed
+        embedVar.title = "EA Server current status"
+        embedVar.description = message
+        embedVar.set_image(url='attachment://ApexServer.png')
+        embedVar.set_footer(text='More data on apexlegendsstatus.com')
+        
+        # define the image
+        Image = discord.File("src/ApexServer.png")
+        
+        # send the message
+        await ctx.send(file=Image, embed=embedVar)
 
 
 @client.event
