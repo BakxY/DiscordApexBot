@@ -77,6 +77,7 @@ async def pingall(ctx):
 @commands.cooldown(rate=1, per=5, type=commands.BucketType.channel)
 async def map(ctx):
     try:
+        message = ''
         APINotReachable = FALSE
         # send request to the api and store the response
         RequestForMaps = requests.get('https://api.mozambiquehe.re/maprotation?version=2&auth=' + APEX_TOKEN)
@@ -93,46 +94,57 @@ async def map(ctx):
 
         # choose right image for map
         if RequestDataResponse['battle_royale']['current']['map'] == 'Olympus': # map is opympus
-            await ctx.channel.send(file=discord.File('src/maps/olympus.jpg'))
+            Image = discord.File('src/maps/olympus.jpg')
 
         elif RequestDataResponse['battle_royale']['current']['map'] == 'Kings Canyon': # map is kings canyon
-            await ctx.channel.send(file=discord.File('src/maps/kings-canyon.jpg'))
+            Image = discord.File('src/maps/kings-canyon.jpg')
 
         elif RequestDataResponse['battle_royale']['current']['map'] == 'Storm Point': # map is storm point
-            await ctx.channel.send(file=discord.File('src/maps/stormpoint.jpg'))
+            Image = discord.File('src/maps/stormpoint.jpg')
 
         else: #default case
-            await ctx.channel.send('```diff' +
-                                    'Map image not implemented yet.'
-                                    '```')
+            message += ('```diff' +
+                        'Map image not implemented yet.'
+                        '```\n')
 
 
         # send battle royale maps
-        await ctx.channel.send('**BATTLE ROYALE**' + 
-                                    '\n```Current map: ' + RequestDataResponse['battle_royale']['current']['map'] +
-                                    '\nRemaining: ' + RequestDataResponse['battle_royale']['current']['remainingTimer'] +
-                                    '\nNext map: ' + RequestDataResponse['battle_royale']['next']['map'] +
-                                    '```')
+        message += ('**BATTLE ROYALE**' + 
+                    '\n> Current map: ' + RequestDataResponse['battle_royale']['current']['map'] +
+                    '\n> Remaining: ' + RequestDataResponse['battle_royale']['current']['remainingTimer'] +
+                    '\n> Next map: ' + RequestDataResponse['battle_royale']['next']['map'] +
+                    '\n')
 
         #send battle royale ranked map
-        await ctx.channel.send('**BATTLE ROYALE RANKED**' +
-                                    '\n```Current map: ' + RequestDataResponse['ranked']['current']['map'] +
-                                    '\nNext split map: ' + RequestDataResponse['ranked']['next']['map'] +
-                                    '```')
+        message += ('\n**BATTLE ROYALE RANKED**' +
+                    '\n> Current map: ' + RequestDataResponse['ranked']['current']['map'] +
+                    '\n> Next split map: ' + RequestDataResponse['ranked']['next']['map'] +
+                    '\n')
 
         #send arenas maps
-        await ctx.channel.send('**ARENAS**' +
-                                    '\n```Current map: ' + RequestDataResponse['arenas']['current']['map'] +
-                                    '\nRemaining: ' + RequestDataResponse['arenas']['current']['remainingTimer'] +
-                                    '\nNext map: ' + RequestDataResponse['arenas']['next']['map'] +
-                                    '```')
+        message += ('\n**ARENAS**' +
+                    '\n> Current map: ' + RequestDataResponse['arenas']['current']['map'] +
+                    '\n> Remaining: ' + RequestDataResponse['arenas']['current']['remainingTimer'] +
+                    '\n> Next map: ' + RequestDataResponse['arenas']['next']['map'] +
+                    '\n')
 
         #send arenas ranked maps
-        await ctx.channel.send('**ARENAS RANKED**' +
-                                    '\n```Current map: ' + RequestDataResponse['arenasRanked']['current']['map'] +
-                                    '\nRemaining: ' + RequestDataResponse['arenasRanked']['current']['remainingTimer'] +
-                                    ' \nNext map: ' + RequestDataResponse['arenasRanked']['next']['map'] +
-                                    '```')
+        message += ('\n**ARENAS RANKED**' +
+                    '\n> Current map: ' + RequestDataResponse['arenasRanked']['current']['map'] +
+                    '\n> Remaining: ' + RequestDataResponse['arenasRanked']['current']['remainingTimer'] +
+                    '\n> Next map: ' + RequestDataResponse['arenasRanked']['next']['map'] +
+                    '\n')
+
+        embedVar = discord.Embed(color=0xEF2AEF)
+
+        # set all parameters for the embed
+        embedVar.title = "Apex Legends current maps"
+        embedVar.description = message
+        embedVar.set_image(url=f'attachment://{Image.filename}')
+        embedVar.set_footer(text='Data from apexlegendsstatus.com') 
+
+        # send the message
+        await ctx.send(file=Image, embed=embedVar)
     else:
         # send error message to discord channel
         await ctx.channel.send('The API is currently offline')
