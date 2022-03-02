@@ -1,5 +1,4 @@
 # much epic disi apex bot go brrrrrrrrrrrrrrrrrrrrrrrrrr
-from pickle import FALSE, TRUE
 import sys
 from typing import Counter
 import discord
@@ -12,13 +11,13 @@ from rank import *
 from log import *
 
 # get discord api key form file
-DISI_TOKEN_FILE = open("src/token/DISI_API_TOKEN", 'r')
+DISI_TOKEN_FILE = open('src/token/DISI_API_TOKEN', 'r')
 DISI_TOKEN = DISI_TOKEN_FILE.read()
 DISI_TOKEN = DISI_TOKEN.replace('\n', '')
 DISI_TOKEN_FILE.close()
 
 # get apex api key form file
-APEX_TOKEN_FILE = open("src/token/APEX_API_TOKEN", 'r')
+APEX_TOKEN_FILE = open('src/token/APEX_API_TOKEN', 'r')
 APEX_TOKEN = APEX_TOKEN_FILE.read()
 APEX_TOKEN = APEX_TOKEN.replace('\n', '')
 APEX_TOKEN_FILE.close()
@@ -78,18 +77,18 @@ async def pingall(ctx):
 async def map(ctx):
     try:
         message = ''
-        APINotReachable = FALSE
+        APINotReachable = False
         # send request to the api and store the response
         RequestForMaps = requests.get('https://api.mozambiquehe.re/maprotation?version=2&auth=' + APEX_TOKEN)
 
     except requests.ConnectionError as exc:
-        if("[Errno 11001] getaddrinfo failed" in str(exc) or # windows
-            "[Errno -2] Name or service not known" in str(exc) or # linux
-            "[Errno 8] nodename nor servname " in str(exc)): # Mac OS
+        if('[Errno 11001] getaddrinfo failed' in str(exc) or # windows
+            '[Errno -2] Name or service not known' in str(exc) or # linux
+            '[Errno 8] nodename nor servname ' in str(exc)): # Mac OS
             print('[ERROR] The API is not reachable by the bot')
-            APINotReachable = TRUE
+            APINotReachable = True
 
-    if APINotReachable == FALSE:
+    if APINotReachable == False:
         RequestDataResponse = RequestForMaps.json()
 
         # choose right image for map
@@ -138,7 +137,7 @@ async def map(ctx):
         embedVar = discord.Embed(color=0xEF2AEF)
 
         # set all parameters for the embed
-        embedVar.title = "Apex Legends current maps"
+        embedVar.title = 'Apex Legends current maps'
         embedVar.description = message
         embedVar.set_image(url=f'attachment://{Image.filename}')
         embedVar.set_footer(text='Data from apexlegendsstatus.com') 
@@ -161,10 +160,10 @@ async def map(ctx):
 @commands.cooldown(rate=1, per=5, type=commands.BucketType.channel)
 async def stats(ctx, Player):
     # create variables
-    PlayerFound, CounterForFor, Platforms = 0, 0, ['PC', 'PS4', 'X1']
-    APINotReachable = FALSE
+    PlayerFound, CounterForFor, Platforms, message = 0, 0, ['PC', 'PS4', 'X1'], ''
+    APINotReachable = False
 
-    while PlayerFound == 0 and APINotReachable == FALSE:
+    while PlayerFound == 0 and APINotReachable == False:
         # check if all the platforms have been checked
         if CounterForFor >= 3:
             # goto error and break
@@ -176,16 +175,16 @@ async def stats(ctx, Player):
             RequestForStats = requests.get('https://api.mozambiquehe.re/bridge?version=5&platform=' + Platforms[CounterForFor] + '&player=' + Player + '&auth=' + APEX_TOKEN)
 
         except requests.ConnectionError as exc:
-            if("[Errno 11001] getaddrinfo failed" in str(exc) or # windows
-                "[Errno -2] Name or service not known" in str(exc) or # linux
-                "[Errno 8] nodename nor servname " in str(exc)): # Mac OS
+            if('[Errno 11001] getaddrinfo failed' in str(exc) or # windows
+                '[Errno -2] Name or service not known' in str(exc) or # linux
+                '[Errno 8] nodename nor servname ' in str(exc)): # Mac OS
                 print('[ERROR] The API is not reachable by the bot')
-                APINotReachable = TRUE
+                APINotReachable = True
 
             else:
                 raise exc
         
-        if APINotReachable == FALSE:
+        if APINotReachable == False:
             RequestDataResponse = json.loads(RequestForStats.text)
 
             # check if the api sent a error
@@ -197,47 +196,61 @@ async def stats(ctx, Player):
             CounterForFor += 1
         
 
-    if PlayerFound == 1 and APINotReachable == FALSE: # Player exists in database
-        # send name and current legend to discord
-        await ctx.channel.send('**' + RequestDataResponse['global']['name'] + '**`s' + ' current Legend is **' + RequestDataResponse['legends']['selected']['LegendName'] + '**')
-        
-        # download banner image and store it
-        BannerImgRequest = requests.get(str(RequestDataResponse['legends']['selected']['ImgAssets']['banner']), allow_redirects=True)
-        open('src/banners/' + RequestDataResponse['legends']['selected']['LegendName'] + '.jpg', 'wb').write(BannerImgRequest.content)
-
-        # send banner image to discord
-        await ctx.channel.send(file=discord.File('src/banners/' + RequestDataResponse['legends']['selected']['LegendName'] + '.jpg'))
-
-        # change X1 platform to Xbox 1 of needed
-        RequestDataResponse['global']['platform'] = RequestDataResponse['global']['platform'].replace('X1', 'Xbox 1')
-
-        #send data as one package
-        await ctx.channel.send('**Platform: ' + RequestDataResponse['global']['platform'] + '**\n'
-                                '**Level: ' + str(RequestDataResponse['global']['level']) + '**\n' +
-                                '**Status: ' + str(RequestDataResponse['realtime']['currentStateAsText']) + '**')
-
-        # check if there are any trackers equiped
+    if PlayerFound == 1 and APINotReachable == False: # Player exists in database
         if 'data' in RequestDataResponse['legends']['selected']:
             name = 'name'
             # set the messages for trackers to default
-            messageTracker = ['no data', 'no data', 'no data']
+            TrackerName = ['no data', 'no data', 'no data']
+            TrackerValue = ['no data', 'no data', 'no data']
 
             CounterForFor = 0
             
             # loop for every tracker equiped
             for name in RequestDataResponse['legends']['selected']['data']: 
                 if 'name' in RequestDataResponse['legends']['selected']['data'][CounterForFor]:
-                    messageTracker[CounterForFor] = RequestDataResponse['legends']['selected']['data'][CounterForFor]['name'] + ': ' + str(RequestDataResponse['legends']['selected']['data'][CounterForFor]['value'])
-                    messageTracker[CounterForFor] = messageTracker[CounterForFor].replace('Special event ', '')
-                    messageTracker[CounterForFor] = messageTracker[CounterForFor].capitalize()
+                    TrackerName[CounterForFor] = RequestDataResponse['legends']['selected']['data'][CounterForFor]['name']
+                    TrackerName[CounterForFor] = TrackerName[CounterForFor].replace('Special event ', '')
+                    TrackerName[CounterForFor] = TrackerName[CounterForFor].capitalize()
+
+                    TrackerValue[CounterForFor] = str(RequestDataResponse['legends']['selected']['data'][CounterForFor]['value'])
 
                 CounterForFor += 1
+
+        # change X1 platform to Xbox 1 of needed
+        RequestDataResponse['global']['platform'] = RequestDataResponse['global']['platform'].replace('X1', 'Xbox 1')
         
-        # send tracker message as a package        
-        await ctx.channel.send('**Trackers: **\n' +
-                                    '```' + messageTracker[0] + '\n' +
-                                    messageTracker[1] + '\n' +
-                                    messageTracker[2] + '```')
+        # set color of embed
+        embedVar = discord.Embed(color=0xEF2AEF)
+
+        # set all parameters for the embed
+        embedVar.title = RequestDataResponse['global']['name'] + ' as ' + RequestDataResponse['legends']['selected']['LegendName']
+        
+        # display some standart stats
+        embedVar.add_field(name='Level', value=str(RequestDataResponse['global']['level']), inline=True)
+        embedVar.add_field(name='BP-Level', value=str(RequestDataResponse['global']['battlepass']['level']), inline=True)
+        embedVar.add_field(name='_ _', value='_ _', inline=False)
+        embedVar.add_field(name='Status', value=RequestDataResponse['realtime']['currentStateAsText'], inline=True)
+        embedVar.add_field(name='Platform', value=RequestDataResponse['global']['platform'], inline=True)
+
+        # spaces
+        embedVar.add_field(name='_ _', value='_ _', inline=False)
+        embedVar.add_field(name='Trackers:', value='_ _', inline=False)
+
+        # display current trackers
+        embedVar.add_field(name=TrackerName[0], value=TrackerValue[0], inline=True)
+        embedVar.add_field(name=TrackerName[1], value=TrackerValue[1], inline=True)
+        embedVar.add_field(name=TrackerName[2], value=TrackerValue[2], inline=True)
+        
+        # set image and thumbnail
+        embedVar.set_image(url=str(RequestDataResponse['legends']['selected']['ImgAssets']['banner']))
+        embedVar.set_thumbnail(url=str(RequestDataResponse['legends']['selected']['ImgAssets']['icon']))
+
+        # set footer and timestamp
+        embedVar.set_footer(text='Data from apexlegendsstatus.com') 
+        embedVar.timestamp = datetime.datetime.now()
+
+        # send the message
+        await ctx.send(embed=embedVar)
 
     elif PlayerFound == 2: # player not found or error
         # send error message to discord channel
@@ -246,7 +259,7 @@ async def stats(ctx, Player):
         # print error message to cli
         print('Error during request to API, message from API: ' + str(RequestDataResponse))
     
-    elif APINotReachable == TRUE:
+    elif APINotReachable == True:
         # send error message to discord channel
         await ctx.channel.send('The API is currently offline')
         await ctx.channel.send(file=discord.File('src/sad-cute.gif'))
@@ -261,7 +274,7 @@ async def stats(ctx, Player):
 @commands.cooldown(rate=1, per=5, type=commands.BucketType.channel)
 async def rank(ctx, Player):
     PlayerFound, CounterForFor, Platforms = 0, 0, ['PC', 'PS4', 'X1']
-    APINotReachable = FALSE
+    APINotReachable = False
 
     while PlayerFound == 0:
         # check if all the platforms have been checked
@@ -274,15 +287,15 @@ async def rank(ctx, Player):
         try:
             RequestForStats = requests.get('https://api.mozambiquehe.re/bridge?version=5&platform=' + Platforms[CounterForFor] + '&player=' + Player + '&auth=' + APEX_TOKEN)
         except requests.ConnectionError as exc:
-            if("[Errno 11001] getaddrinfo failed" in str(exc) or # windows
-                "[Errno -2] Name or service not known" in str(exc) or # linux
-                "[Errno 8] nodename nor servname " in str(exc)): # Mac OS
+            if('[Errno 11001] getaddrinfo failed' in str(exc) or # windows
+                '[Errno -2] Name or service not known' in str(exc) or # linux
+                '[Errno 8] nodename nor servname ' in str(exc)): # Mac OS
                 print('[ERROR] The API is not reachable by the bot')
-                APINotReachable = TRUE
+                APINotReachable = True
             else:
                 raise exc
                 
-        if APINotReachable == FALSE:    
+        if APINotReachable == False:    
             RequestDataResponse = json.loads(RequestForStats.text)
 
             # check if the api sent a error
@@ -293,7 +306,7 @@ async def rank(ctx, Player):
 
             CounterForFor += 1
 
-    if PlayerFound == 1 and APINotReachable == FALSE: # Player exists in database
+    if PlayerFound == 1 and APINotReachable == False: # Player exists in database
         # download badges
         RankImage_DownloadBadges(RequestDataResponse['global']['rank'], RequestDataResponse['global']['arena'])
 
@@ -322,7 +335,7 @@ async def rank(ctx, Player):
         # print error message to cli
         print('Error during request to API, message from API: ' + str(RequestDataResponse))
 
-    elif APINotReachable == TRUE:
+    elif APINotReachable == True:
         # send error message to discord channel
         await ctx.channel.send('The API is currently offline')
         await ctx.channel.send(file=discord.File('src/sad-cute.gif'))
@@ -337,20 +350,20 @@ async def rank(ctx, Player):
 @client.command(brief='Shows the status of all servers', description='This command lists all the servers with theire status')
 @commands.cooldown(rate=1, per=5, type=commands.BucketType.channel)
 async def status(ctx):
-    APINotReachable, CounterForFor, message, ServerType, ServerLoc = FALSE, 0, '', 0, 0
+    APINotReachable, CounterForFor, message, ServerType, ServerLoc = False, 0, '', 0, 0
 
     try:
             RequestForStats = requests.get('https://api.mozambiquehe.re/servers?auth=' + APEX_TOKEN)
     except requests.ConnectionError as exc:
-        if("[Errno 11001] getaddrinfo failed" in str(exc) or # windows
-            "[Errno -2] Name or service not known" in str(exc) or # linux
-            "[Errno 8] nodename nor servname " in str(exc)): # Mac OS
+        if('[Errno 11001] getaddrinfo failed' in str(exc) or # windows
+            '[Errno -2] Name or service not known' in str(exc) or # linux
+            '[Errno 8] nodename nor servname ' in str(exc)): # Mac OS
             print('[ERROR] The API is not reachable by the bot')
-            APINotReachable = TRUE
+            APINotReachable = True
         else:
             raise exc
 
-    if APINotReachable == FALSE:
+    if APINotReachable == False:
         RequestDataResponse = json.loads(RequestForStats.text)
 
         for i in RequestDataResponse: # repeat for every index in RequestDataResponse
@@ -391,13 +404,13 @@ async def status(ctx):
         embedVar = discord.Embed(color=0xEF2AEF)
 
         # set all parameters for the embed
-        embedVar.title = "EA Server current status"
+        embedVar.title = 'EA Server current status'
         embedVar.description = message
         embedVar.set_image(url='attachment://ApexServer.png')
         embedVar.set_footer(text='More data on apexlegendsstatus.com')
         
         # define the image
-        Image = discord.File("src/ApexServer.png")
+        Image = discord.File('src/ApexServer.png')
         
         # send the message
         await ctx.send(file=Image, embed=embedVar)
@@ -409,7 +422,7 @@ async def on_message(message):
     if mention in message.content:
         ctx = await client.get_context(message)
         if not ctx.message.author.voice:
-            await ctx.send("{} is not connected to a voice channel".format(ctx.message.author.name))
+            await ctx.send('{} is not connected to a voice channel'.format(ctx.message.author.name))
             return
         else:
             channel = ctx.message.author.voice.channel
