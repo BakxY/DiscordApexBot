@@ -143,11 +143,11 @@ async def map(ctx):
         embedVar.set_footer(text='Data from apexlegendsstatus.com') 
 
         # send the message
-        await ctx.send(file=Image, embed=embedVar)
+        await ctx.reply(file=Image, embed=embedVar)
     else:
         # send error message to discord channel
-        await ctx.channel.send('The API is currently offline')
-        await ctx.channel.send(file=discord.File('src/sad-cute.gif'))
+        await ctx.reply('The API is currently offline')
+        await ctx.reply(file=discord.File('src/sad-cute.gif'))
 
 
 
@@ -250,19 +250,19 @@ async def stats(ctx, Player):
         embedVar.timestamp = datetime.datetime.now()
 
         # send the message
-        await ctx.send(embed=embedVar)
+        await ctx.reply(embed=embedVar)
 
     elif PlayerFound == 2: # player not found or error
         # send error message to discord channel
-        await ctx.channel.send(RequestDataResponse['Error'])
-        await ctx.channel.send(file=discord.File('src/sad-cute.gif'))
+        await ctx.reply(RequestDataResponse['Error'])
+        await ctx.reply(file=discord.File('src/sad-cute.gif'))
         # print error message to cli
         print('Error during request to API, message from API: ' + str(RequestDataResponse))
     
     elif APINotReachable == True:
         # send error message to discord channel
-        await ctx.channel.send('The API is currently offline')
-        await ctx.channel.send(file=discord.File('src/sad-cute.gif'))
+        await ctx.reply('The API is currently offline')
+        await ctx.reply(file=discord.File('src/sad-cute.gif'))
 
 
 
@@ -326,19 +326,19 @@ async def rank(ctx, Player):
         RankImage_Save()
 
         # send picture to channel
-        await ctx.channel.send(file=discord.File('src/rank/rank.png'))
+        await ctx.reply(file=discord.File('src/rank/rank.png'))
 
     elif PlayerFound == 2: # player not found or error
         # send error message to discord channel
-        await ctx.channel.send(RequestDataResponse['Error'])
-        await ctx.channel.send(file=discord.File('src/sad-cute.gif'))
+        await ctx.reply(RequestDataResponse['Error'])
+        await ctx.reply(file=discord.File('src/sad-cute.gif'))
         # print error message to cli
         print('Error during request to API, message from API: ' + str(RequestDataResponse))
 
     elif APINotReachable == True:
         # send error message to discord channel
-        await ctx.channel.send('The API is currently offline')
-        await ctx.channel.send(file=discord.File('src/sad-cute.gif'))
+        await ctx.reply('The API is currently offline')
+        await ctx.reply(file=discord.File('src/sad-cute.gif'))
 
 
 
@@ -413,7 +413,7 @@ async def status(ctx):
         Image = discord.File('src/ApexServer.png')
         
         # send the message
-        await ctx.send(file=Image, embed=embedVar)
+        await ctx.reply(file=Image, embed=embedVar)
 
 
 @client.event
@@ -422,7 +422,7 @@ async def on_message(message):
     if mention in message.content:
         ctx = await client.get_context(message)
         if not ctx.message.author.voice:
-            await ctx.send('{} is not connected to a voice channel'.format(ctx.message.author.name))
+            await ctx.reply('{} is not connected to a voice channel'.format(ctx.message.author.name))
             return
         else:
             channel = ctx.message.author.voice.channel
