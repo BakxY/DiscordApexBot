@@ -7,7 +7,6 @@ import json
 import requests
 import time
 
-from rank import *
 from log import *
 
 # get discord api key form file
@@ -307,26 +306,52 @@ async def rank(ctx, Player):
             CounterForFor += 1
 
     if PlayerFound == 1 and APINotReachable == False: # Player exists in database
-        # download badges
-        RankImage_DownloadBadges(RequestDataResponse['global']['rank'], RequestDataResponse['global']['arena'])
+        message = ''
 
-        # create image
-        RankImage_Create()
+        RequestDataResponse['global']['rank']['rankedSeason']  = RequestDataResponse['global']['rank']['rankedSeason'].replace('season', 'Season ')
+        RequestDataResponse['global']['rank']['rankedSeason']  = RequestDataResponse['global']['rank']['rankedSeason'].replace('_split_', '')
+        RequestDataResponse['global']['rank']['rankedSeason']  = RequestDataResponse['global']['rank']['rankedSeason'][:-1]
 
-        # write player name
-        RankImage_PlayerName(RequestDataResponse['global']['name'])
+        RequestDataResponse['global']['arena']['rankedSeason']  = RequestDataResponse['global']['arena']['rankedSeason'].replace('arenas', 'Season ')
+        RequestDataResponse['global']['arena']['rankedSeason']  = RequestDataResponse['global']['arena']['rankedSeason'].replace('_split_', '')
+        RequestDataResponse['global']['arena']['rankedSeason']  = RequestDataResponse['global']['arena']['rankedSeason'][:-1]
+        
+        # set color of embed
+        embedVar = discord.Embed(color=0xEF2AEF)
 
-        # add BR badge parts
-        RankImage_BRbadge(RequestDataResponse['global']['rank'])
+        # set all parameters for the embed
+        embedVar.title = RequestDataResponse['global']['name'] + ' in BR ranked ' + RequestDataResponse['global']['rank']['rankedSeason']
 
-        # add AR badge parts
-        RankImage_ARbadge(RequestDataResponse['global']['arena'])
+        # create fields for infos
+        embedVar.add_field(name='Current Rank', value=RequestDataResponse['global']['rank']['rankName'] + ' ' + str(RequestDataResponse['global']['rank']['rankDiv']), inline=True)
+        embedVar.add_field(name='Current RP', value=str(RequestDataResponse['global']['rank']['rankScore']) + ' RP', inline=True)
 
-        # save image
-        RankImage_Save()
+        # set thumbnail
+        embedVar.set_thumbnail(url=str(RequestDataResponse['global']['rank']['rankImg']))
 
-        # send picture to channel
-        await ctx.reply(file=discord.File('src/rank/rank.png'))
+        # set footer and timestamp
+        embedVar.set_footer(text='Data from apexlegendsstatus.com') 
+        embedVar.timestamp = datetime.datetime.now()
+
+        # send the message
+        await ctx.reply(embed=embedVar)
+
+        # remove the old fields
+        embedVar.remove_field(-1)
+        embedVar.remove_field(-1)
+        
+        # set all parameters for the embed
+        embedVar.title = RequestDataResponse['global']['name'] + ' in arenas ranked ' + RequestDataResponse['global']['arena']['rankedSeason']
+
+        # create fields for infos
+        embedVar.add_field(name='Current Rank', value=RequestDataResponse['global']['arena']['rankName'] + ' ' + str(RequestDataResponse['global']['arena']['rankDiv']), inline=True)
+        embedVar.add_field(name='Current RP', value=str(RequestDataResponse['global']['arena']['rankScore']) + ' RP', inline=True)
+
+        # set thumbnail
+        embedVar.set_thumbnail(url=str(RequestDataResponse['global']['arena']['rankImg']))
+
+        # send the message
+        await ctx.reply(embed=embedVar)
 
     elif PlayerFound == 2: # player not found or error
         # send error message to discord channel
