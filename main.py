@@ -35,9 +35,6 @@ client = commands.Bot(
     help_command = help_command
 )
 
-# get name of bot
-mention = f'<@!{client.user.id}>'
-
 # get the current operating system
 OperatingSystem = sys.platform 
 
@@ -184,6 +181,7 @@ async def stats(ctx, Player):
 async def rank(ctx, Player):
     PlayerFound = 0
     CounterForFor= 0
+    APINotReachable = False
 
     # while loop for looping over all platforms
     while PlayerFound == 0 and APINotReachable == False:
@@ -289,6 +287,9 @@ async def dev(ctx):
 
 @client.event
 async def on_message(message):
+    # get name of bot
+    mention = f'<@!{client.user.id}>'
+    
     # check if bot has been mentioned as an @ ping
     if mention in message.content:
         # get the context for the ping message
