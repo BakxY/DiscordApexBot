@@ -43,7 +43,7 @@ elif OperatingSystem == 'darwin': # os is macOS
     PathToFFMPEG = 'src/bin/ffmpeg-mac'
 
 else: # os is not in list
-    print('No FFMPEG version for you os')
+    print('No FFMPEG version for your os')
     exit()
 
 # on ready event for start of bot
