@@ -1,4 +1,0 @@
-200 = valid request (may have errors)
-403 = wrone api token
-410 = onknown platform
-404 = player not found

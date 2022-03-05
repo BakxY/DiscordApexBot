@@ -2,12 +2,16 @@
 import sys
 import discord
 from discord.ext import commands
-import time
+from time import sleep
 
+# import custom functions
 from map import Map
 from stats import Stats, StatsPlayer, StatsRank
 from status import Status, Dev
 from log import LogFile
+
+# global variables
+Platforms = ['PC', 'PS4', 'X1']
 
 # get discord api key form file
 DISI_TOKEN_FILE = open('src/token/DISI_API_TOKEN', 'r')
@@ -31,8 +35,13 @@ client = commands.Bot(
     help_command = help_command
 )
 
-OperatingSystem = sys.platform # get the current operating system
+# get name of bot
+mention = f'<@!{client.user.id}>'
 
+# get the current operating system
+OperatingSystem = sys.platform 
+
+# select version of FFMPEG for os
 if OperatingSystem == 'win32': # os is windows
     PathToFFMPEG = 'src/bin/ffmpeg.exe'
 
@@ -44,12 +53,19 @@ elif OperatingSystem == 'darwin': # os is macOS
 
 else: # os is not in list
     print('No FFMPEG version for your os')
+    LogFile.WriteLog('No FFMPEG version for your os')
     exit()
+
+#################################
+
+# !event for start of bot
+
+#################################
 
 # on ready event for start of bot
 @client.event
 async def on_ready():
-    print(f'{client.user} has connected to Discord')
+    print('Bot has connected to discord and is now online.')
 
 #################################
 
@@ -60,8 +76,7 @@ async def on_ready():
 @client.command(brief='Pings all user in a discord', description='This command pings all user in a discord server and sends an image')
 @commands.cooldown(rate=1, per=5, type=commands.BucketType.channel)
 async def pingall(ctx):
-    await ctx.channel.send('@everyone')
-    await ctx.channel.send(file=discord.File('src/ping.jpg'))
+    await ctx.channel.send('@everyone', file=discord.File('src/ping.jpg'))
 
 #################################
 
@@ -75,20 +90,30 @@ async def map(ctx):
     # get data from api
     APINotReachable, RequestForMaps = Map.GetData(APEX_TOKEN)
 
-    if APINotReachable == False:
+    # check if API was reachable
+    if APINotReachable == False: # API was reachable
+        # convert request data to json format for reads
         RequestDataResponse = RequestForMaps.json()
+
         # get image of current map
         Image = Map.GetImage(RequestDataResponse['battle_royale']['current']['map'])
+
         # get stats of current modes
         message = Map.GetStatus(RequestDataResponse)
+
         # configurate embed message
         embedVar = Map.ConfigEmbed(message, Image)
+
         # send the message
         await ctx.reply(file=Image, embed=embedVar)
-    else:
+
+    else: # API was unreachable
+        # write to log file and cli
+        print('The API is currently not reachable by the bot')
+        LogFile.WriteLog('The API is currently not reachable by the bot')
+
         # send error message to discord channel
-        await ctx.reply('The API is currently offline')
-        await ctx.reply(file=discord.File('src/sad-cute.gif'))
+        await ctx.reply('The API is currently offline', file=discord.File('src/sad-cute.gif'))
 
 #################################
 
@@ -100,9 +125,11 @@ async def map(ctx):
 @commands.cooldown(rate=1, per=5, type=commands.BucketType.channel)
 async def stats(ctx, Player):
     # create variables
-    PlayerFound, CounterForFor, Platforms, message = 0, 0, ['PC', 'PS4', 'X1'], ''
+    CounterForFor = 0
+    PlayerFound = 0
     APINotReachable = False
 
+    # while loop for looping over all platforms
     while PlayerFound == 0 and APINotReachable == False:
         # check if all the platforms have been checked
         if CounterForFor >= 3:
@@ -112,6 +139,7 @@ async def stats(ctx, Player):
         
         # get player data from api
         APINotReachable, RequestForStats = Stats.GetData(Platforms[CounterForFor], Player, APEX_TOKEN)
+
         # check received data from api
         RequestDataResponse, PlayerFound, CounterForFor = Stats.CheckData(APINotReachable, RequestForStats, CounterForFor)
         
@@ -131,16 +159,19 @@ async def stats(ctx, Player):
 
     elif PlayerFound == 2: # player not found or error
         # send error message to discord channel
-        await ctx.reply(RequestDataResponse['Error'])
-        await ctx.reply(file=discord.File('src/sad-cute.gif'))
-        # print error message to cli
+        await ctx.reply(RequestDataResponse['Error'], file=discord.File('src/sad-cute.gif'))
+
+        # print error message to cli and log file
         print('Error during request to API, message from API: ' + str(RequestDataResponse))
         LogFile.WriteLog('Error during request to API, message from API: ' + str(RequestDataResponse))
     
     elif APINotReachable == True:
+        # write to log file and cli
+        print('The API is currently not reachable by the bot')
+        LogFile.WriteLog('The API is currently not reachable by the bot')
+
         # send error message to discord channel
-        await ctx.reply('The API is currently offline')
-        await ctx.reply(file=discord.File('src/sad-cute.gif'))
+        await ctx.reply('The API is currently offline', file=discord.File('src/sad-cute.gif'))
 
 #################################
 
@@ -151,9 +182,11 @@ async def stats(ctx, Player):
 @client.command(brief='Shows ranks of a player', description='This command displays ranks of a given player')
 @commands.cooldown(rate=1, per=5, type=commands.BucketType.channel)
 async def rank(ctx, Player):
-    PlayerFound, CounterForFor, Platforms = 0, 0, ['PC', 'PS4', 'X1']
+    PlayerFound = 0
+    CounterForFor= 0
 
-    while PlayerFound == 0:
+    # while loop for looping over all platforms
+    while PlayerFound == 0 and APINotReachable == False:
         # check if all the platforms have been checked
         if CounterForFor >= 3:
             # goto error and break
@@ -162,6 +195,7 @@ async def rank(ctx, Player):
 
         # get player data from api
         APINotReachable, RequestForStats = Stats.GetData(Platforms[CounterForFor], Player, APEX_TOKEN)
+
         # check received data from api
         RequestDataResponse, PlayerFound, CounterForFor = Stats.CheckData(APINotReachable, RequestForStats, CounterForFor)
 
@@ -172,27 +206,32 @@ async def rank(ctx, Player):
 
         # configure embed for battle royale ranked
         embedVar = StatsRank.ConfigEmbedBR(RequestDataResponse)
+
         # send the message
         await ctx.reply(embed=embedVar)
 
         # configure embed for arena ranked
         embedVar = StatsRank.ConfigEmbedAR(RequestDataResponse)
+
         # send the message
         await ctx.reply(embed=embedVar)
 
     elif PlayerFound == 2: # player not found or error
         # send error message to discord channel
-        await ctx.reply(RequestDataResponse['Error'])
-        await ctx.reply(file=discord.File('src/sad-cute.gif'))
-        # print error message to cli
+        await ctx.reply(RequestDataResponse['Error'], file=discord.File('src/sad-cute.gif'))
+
+        # print error message to cli and log file
         print('Error during request to API, message from API: ' + str(RequestDataResponse))
         LogFile.WriteLog('Error during request to API, message from API: ' + str(RequestDataResponse))
 
     elif APINotReachable == True:
-        # send error message to discord channel
-        await ctx.reply('The API is currently offline')
-        await ctx.reply(file=discord.File('src/sad-cute.gif'))
+        # write to log file and cli
+        print('The API is currently not reachable by the bot')
+        LogFile.WriteLog('The API is currently not reachable by the bot')
 
+        # send error message to discord channel
+        await ctx.reply('The API is currently offline', file=discord.File('src/sad-cute.gif'))
+        
 #################################
 
 # !status command
@@ -205,7 +244,9 @@ async def status(ctx):
     # get server data from api
     APINotReachable, RequestForStatus = Status.GetData(APEX_TOKEN)
 
+    # check if the API was reachable
     if APINotReachable == False:
+        # convert request data to json format for reads
         RequestDataResponse = RequestForStatus.json()
 
         # create message of all server states
@@ -219,6 +260,14 @@ async def status(ctx):
         
         # send the message
         await ctx.reply(file=Image, embed=embedVar)
+    
+    else:
+        # write to log file and cli
+        print('The API is currently not reachable by the bot')
+        LogFile.WriteLog('The API is currently not reachable by the bot')
+
+        # send error message to discord channel
+        await ctx.reply('The API is currently offline', file=discord.File('src/sad-cute.gif'))
 
 #################################
 
@@ -234,28 +283,39 @@ async def dev(ctx):
 
 #################################
 
-# @bot ping
+#! @bot ping
 
 #################################
 
 @client.event
 async def on_message(message):
-    mention = f'<@!{client.user.id}>'
+    # check if bot has been mentioned as an @ ping
     if mention in message.content:
+        # get the context for the ping message
         ctx = await client.get_context(message)
+        # check if author of message is in voice channeö
         if not ctx.message.author.voice:
+            # send message to text channel
             await ctx.reply('{} is not connected to a voice channel'.format(ctx.message.author.name))
             return
         else:
+            # set the channel to author channel
             channel = ctx.message.author.voice.channel
 
+        # connect to voice channel
         vc = await channel.connect()
+
+        # play sound file using FFMPEG
         vc.play(discord.FFmpegPCMAudio(executable=PathToFFMPEG, source='src/sound/dafuq.mp3'))
 
-        time.sleep(5)
+        # wait for 5 seconds so the file can finish playing
+        sleep(5)
 
+        # leave the voice channel
         await vc.disconnect()
+
+    # give the message to the command handler
     await client.process_commands(message)
 
-# run the client
+# run the discord bot with the discord token
 client.run(DISI_TOKEN)
