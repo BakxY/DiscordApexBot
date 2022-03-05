@@ -433,6 +433,7 @@ async def status(ctx):
         embedVar.description = message
         embedVar.set_image(url='attachment://ApexServer.png')
         embedVar.set_footer(text='More data on apexlegendsstatus.com')
+        embedVar.timestamp = datetime.datetime.now()
         
         # define the image
         Image = discord.File('src/ApexServer.png')
@@ -440,6 +441,30 @@ async def status(ctx):
         # send the message
         await ctx.reply(file=Image, embed=embedVar)
 
+@client.command(brief='Shows infos about bot and devs', description='This command shows come infos about the bot and its creators', aliases=['about', 'devs', 'info'])
+@commands.cooldown(rate=1, per=5, type=commands.BucketType.channel)
+async def dev(ctx):
+    message = ''
+    
+    embedVar = discord.Embed(color=0xEF2AEF)
+
+    message += ('**About the bot**\n' +
+    'This is an discord bot with inegration for apex legends. It can show the current map, stats, status of servers and ranks of players. The bot was created out of boredom during the COVID-19 pandamic.\n')
+
+    message += '_ _\n'
+
+    message += ('**Devs**\n' +
+    'The bot was programmed by BakxY and FischerTG. The current code is written in Python, but the we will switch to JavaScript shortly. All the code can be found on github.\n')
+
+    message += '_ _\n'
+
+    message += 'Source code: https://github.com/BakxY/DiscordApexBot'
+
+    embedVar.description = message
+
+    embedVar.timestamp = datetime.datetime.now()
+
+    await ctx.reply(embed=embedVar)
 
 @client.event
 async def on_message(message):
