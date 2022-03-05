@@ -109,8 +109,8 @@ async def map(ctx):
 
     else: # API was unreachable
         # write to log file and cli
-        print('The API is currently nor reachable by the bot')
-        LogFile.WriteLog('The API is currently nor reachable by the bot')
+        print('The API is currently not reachable by the bot')
+        LogFile.WriteLog('The API is currently not reachable by the bot')
 
         # send error message to discord channel
         await ctx.reply('The API is currently offline', file=discord.File('src/sad-cute.gif'))
@@ -167,8 +167,8 @@ async def stats(ctx, Player):
     
     elif APINotReachable == True:
         # write to log file and cli
-        print('The API is currently nor reachable by the bot')
-        LogFile.WriteLog('The API is currently nor reachable by the bot')
+        print('The API is currently not reachable by the bot')
+        LogFile.WriteLog('The API is currently not reachable by the bot')
 
         # send error message to discord channel
         await ctx.reply('The API is currently offline', file=discord.File('src/sad-cute.gif'))
@@ -226,8 +226,8 @@ async def rank(ctx, Player):
 
     elif APINotReachable == True:
         # write to log file and cli
-        print('The API is currently nor reachable by the bot')
-        LogFile.WriteLog('The API is currently nor reachable by the bot')
+        print('The API is currently not reachable by the bot')
+        LogFile.WriteLog('The API is currently not reachable by the bot')
 
         # send error message to discord channel
         await ctx.reply('The API is currently offline', file=discord.File('src/sad-cute.gif'))
@@ -263,8 +263,8 @@ async def status(ctx):
     
     else:
         # write to log file and cli
-        print('The API is currently nor reachable by the bot')
-        LogFile.WriteLog('The API is currently nor reachable by the bot')
+        print('The API is currently not reachable by the bot')
+        LogFile.WriteLog('The API is currently not reachable by the bot')
 
         # send error message to discord channel
         await ctx.reply('The API is currently offline', file=discord.File('src/sad-cute.gif'))
